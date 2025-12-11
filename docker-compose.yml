@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: emr-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: emr123456
+      MYSQL_DATABASE: emr_system
+      MYSQL_USER: emr_user
+      MYSQL_PASSWORD: emr_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - emr-network
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: emr-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - emr-network
+
+  # 后端API服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: emr-backend
+    environment:
+      DATABASE_URL: mysql://emr_user:emr_password@mysql:3306/emr_system
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-jwt-secret-key
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+      - redis
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - emr-network
+
+  # 前端应用
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: emr-frontend
+    environment:
+      VITE_API_URL: http://localhost:3000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - emr-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  emr-network:
+    driver: bridge
