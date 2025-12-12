@@ -268,6 +268,91 @@ const routes: RouteRecordRaw[] = [
         name: 'RevenueReport',
         component: () => import('@/views/statistics/Revenue.vue'),
         meta: { title: '收入报表', hidden: true }
+      },
+      // 系统管理模块
+      {
+        path: '/system',
+        name: 'System',
+        component: () => import('@/views/system/Index.vue'),
+        meta: { title: '系统管理', icon: 'Setting' }
+      },
+      {
+        path: '/system/users',
+        name: 'SystemUsers',
+        component: () => import('@/views/system/users/Index.vue'),
+        meta: { title: '用户管理', icon: 'UserFilled', parent: 'System' }
+      },
+      {
+        path: '/system/users/create',
+        name: 'SystemUserCreate',
+        component: () => import('@/views/system/users/Form.vue'),
+        meta: { title: '新增用户', hidden: true }
+      },
+      {
+        path: '/system/users/:id/edit',
+        name: 'SystemUserEdit',
+        component: () => import('@/views/system/users/Form.vue'),
+        meta: { title: '编辑用户', hidden: true }
+      },
+      {
+        path: '/system/roles',
+        name: 'SystemRoles',
+        component: () => import('@/views/system/roles/Index.vue'),
+        meta: { title: '角色管理', icon: 'User', parent: 'System' }
+      },
+      {
+        path: '/system/roles/create',
+        name: 'SystemRoleCreate',
+        component: () => import('@/views/system/roles/Form.vue'),
+        meta: { title: '新增角色', hidden: true }
+      },
+      {
+        path: '/system/roles/:id/edit',
+        name: 'SystemRoleEdit',
+        component: () => import('@/views/system/roles/Form.vue'),
+        meta: { title: '编辑角色', hidden: true }
+      },
+      {
+        path: '/system/departments',
+        name: 'SystemDepartments',
+        component: () => import('@/views/system/departments/Index.vue'),
+        meta: { title: '科室管理', icon: 'OfficeBuilding', parent: 'System' }
+      },
+      {
+        path: '/system/departments/create',
+        name: 'SystemDepartmentCreate',
+        component: () => import('@/views/system/departments/Form.vue'),
+        meta: { title: '新增科室', hidden: true }
+      },
+      {
+        path: '/system/departments/:id/edit',
+        name: 'SystemDepartmentEdit',
+        component: () => import('@/views/system/departments/Form.vue'),
+        meta: { title: '编辑科室', hidden: true }
+      },
+      {
+        path: '/system/settings',
+        name: 'SystemSettings',
+        component: () => import('@/views/system/settings/Index.vue'),
+        meta: { title: '系统设置', icon: 'Tools', parent: 'System' }
+      },
+      {
+        path: '/system/settings/create',
+        name: 'SystemSettingCreate',
+        component: () => import('@/views/system/settings/Form.vue'),
+        meta: { title: '新增设置', hidden: true }
+      },
+      {
+        path: '/system/settings/:key/edit',
+        name: 'SystemSettingEdit',
+        component: () => import('@/views/system/settings/Form.vue'),
+        meta: { title: '编辑设置', hidden: true }
+      },
+      {
+        path: '/system/logs',
+        name: 'SystemLogs',
+        component: () => import('@/views/system/logs/Index.vue'),
+        meta: { title: '操作日志', icon: 'Document', parent: 'System' }
       }
     ]
   }
