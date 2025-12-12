@@ -239,7 +239,7 @@ export class MedicalRecordService {
           doctor: {
             select: {
               id: true,
-              name: true,
+              realName: true,
               department: true
             }
           }

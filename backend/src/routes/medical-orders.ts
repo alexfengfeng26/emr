@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { MedicalOrderService } from '@/services/medical-order.service'
-import { requireDoctor, requireDoctorOrNurse } from '@/middleware/auth'
+import { authenticate, requireDoctor, requireDoctorOrNurse } from '@/middleware/auth'
 import { z } from 'zod'
 import { MedicalOrderType, OrderStatus, OrderPriority } from '@prisma/client'
 
@@ -197,7 +197,7 @@ const getPatientActiveOrders = async (request: FastifyRequest, reply: FastifyRep
 export const medicalOrderRoutes = async (fastify: FastifyInstance) => {
   // 获取医嘱列表（医生和护士可以查看）
   fastify.get('/', {
-    preHandler: requireDoctorOrNurse
+    preHandler: [authenticate, requireDoctorOrNurse]
   }, getMedicalOrderList)
 
   // 创建医嘱（医生可以创建）

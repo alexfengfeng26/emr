@@ -247,7 +247,7 @@ export class MedicalOrderService {
           doctor: {
             select: {
               id: true,
-              name: true,
+              realName: true,
               department: true
             }
           }

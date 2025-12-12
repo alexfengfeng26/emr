@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { MedicalRecordService } from '@/services/medical-record.service'
-import { requireDoctor, requireAdmin } from '@/middleware/auth'
+import { authenticate, requireDoctor, requireAdmin } from '@/middleware/auth'
 import { z } from 'zod'
 import { MedicalRecordType, MedicalRecordStatus } from '@prisma/client'
 
@@ -229,7 +229,7 @@ const getMedicalRecordStatistics = async (request: FastifyRequest, reply: Fastif
 export const medicalRecordRoutes = async (fastify: FastifyInstance) => {
   // 获取病历列表（医生可以查看）
   fastify.get('/', {
-    preHandler: requireDoctor
+    preHandler: [authenticate, requireDoctor]
   }, getMedicalRecordList)
 
   // 创建病历（医生可以创建）

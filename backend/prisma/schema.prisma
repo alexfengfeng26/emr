@@ -8,6 +8,98 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// 枚举定义
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum UserRole {
+  ADMIN
+  DOCTOR
+  NURSE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum BloodType {
+  A
+  B
+  AB
+  O
+}
+
+enum PatientStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum MedicalRecordType {
+  OUTPATIENT    // 门诊病历
+  INPATIENT     // 住院病历
+  EMERGENCY     // 急诊病历
+  SURGERY       // 手术记录
+  DISCHARGE     // 出院记录
+  CONSULTATION  // 会诊记录
+}
+
+enum MedicalRecordStatus {
+  DRAFT
+  SUBMITTED
+  REVIEWING
+  APPROVED
+  REJECTED
+}
+
+enum MedicalOrderType {
+  MEDICATION    // 药物医嘱
+  EXAMINATION   // 检查医嘱
+  LABORATORY    // 检验医嘱
+  TREATMENT     // 治疗医嘱
+  NURSING       // 护理医嘱
+  DIET          // 饮食医嘱
+}
+
+enum OrderPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+  STAT
+}
+
+enum OrderStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  SUSPENDED
+  EXPIRED
+  DRAFT
+  ARCHIVED
+}
+
+enum ExaminationType {
+  LABORATORY    // 实验室检查
+  RADIOLOGY     // 影像检查
+  PATHOLOGY     // 病理检查
+  FUNCTION      // 功能检查
+  ENDOSCOPY     // 内镜检查
+  ULTRASOUND    // 超声检查
+  ECG           // 心电图
+  EEG           // 脑电图
+}
+
+enum ExaminationStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
 // 用户表
 model User {
   id          Int      @id @default(autoincrement())
@@ -18,6 +110,7 @@ model User {
   email       String?  @unique @db.VarChar(100)
   phone       String?  @db.VarChar(20)
   avatar      String?  @db.VarChar(255)
+  role        UserRole @default(DOCTOR)       // 用户角色
   departmentId Int?
   position    String?  @db.VarChar(100)        // 职位
   title       String?  @db.VarChar(100)        // 职称
@@ -31,7 +124,7 @@ model User {
 
   // 关联关系
   department  Department? @relation("DepartmentUsers", fields: [departmentId], references: [id])
-  roles       UserRole[]
+  roles       UserRoleAssignment[] @relation("UserRoles")
   medicalRecords     MedicalRecord[]
   submittedRecords   MedicalRecord[] @relation("RecordSubmitter")
   approvedRecords    MedicalRecord[] @relation("RecordApprover")
@@ -124,8 +217,7 @@ model MedicalRecord {
   @@index([recordId])
   @@index([patientId])
   @@index([doctorId])
-  @@index([status])
-  @@index([createdAt])
+    @@index([createdAt])
   @@map("medical_records")
 }
 
@@ -156,8 +248,7 @@ model MedicalOrder {
   @@index([orderId])
   @@index([patientId])
   @@index([doctorId])
-  @@index([status])
-  @@index([createdAt])
+    @@index([createdAt])
   @@map("medical_orders")
 }
 
@@ -184,9 +275,7 @@ model Examination {
   reporter    User?  @relation("ExaminationReportedBy", fields: [reportedBy], references: [id])
 
   @@index([patientId])
-  @@index([examType])
-  @@index([status])
-  @@index([createdAt])
+      @@index([createdAt])
   @@map("examinations")
 }
 
@@ -216,8 +305,8 @@ model Role {
   updatedBy   Int?
 
   // 关联关系
-  users       UserRole[]
-  permissions RolePermission[]
+  userRoleAssignments UserRoleAssignment[] @relation("RoleUsers")
+  permissions       RolePermission[]
 
   @@map("roles")
 }
@@ -249,7 +338,7 @@ model Permission {
 }
 
 // 用户角色关联表
-model UserRole {
+model UserRoleAssignment {
   id        Int      @id @default(autoincrement())
   userId    Int
   roleId    Int
@@ -257,8 +346,8 @@ model UserRole {
   createdBy Int?
 
   // 关联关系
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user      User     @relation("UserRoles", fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation("RoleUsers", fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([userId, roleId])
   @@map("user_roles")
@@ -474,92 +563,4 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@map("audit_logs")
-}
-
-// 枚举定义
-enum UserStatus {
-  ACTIVE
-  INACTIVE
-  SUSPENDED
-}
-
-enum Gender {
-  MALE
-  FEMALE
-}
-
-enum BloodType {
-  A
-  B
-  AB
-  O
-}
-
-enum PatientStatus {
-  ACTIVE
-  INACTIVE
-  DECEASED
-}
-
-enum MedicalRecordType {
-  OUTPATIENT    // 门诊病历
-  INPATIENT     // 住院病历
-  EMERGENCY     // 急诊病历
-  SURGERY       // 手术记录
-  DISCHARGE     // 出院记录
-  CONSULTATION  // 会诊记录
-}
-
-enum MedicalRecordStatus {
-  DRAFT
-  SUBMITTED
-  REVIEWING
-  APPROVED
-  REJECTED
-}
-
-enum MedicalOrderType {
-  MEDICATION    // 药物医嘱
-  EXAMINATION   // 检查医嘱
-  LABORATORY    // 检验医嘱
-  TREATMENT     // 治疗医嘱
-  NURSING       // 护理医嘱
-  DIET          // 饮食医嘱
-}
-
-enum OrderPriority {
-  LOW
-  NORMAL
-  HIGH
-  URGENT
-  STAT
-}
-
-enum OrderStatus {
-  PENDING
-  ACTIVE
-  COMPLETED
-  CANCELLED
-  SUSPENDED
-  EXPIRED
-  DRAFT
-  ARCHIVED
-}
-
-enum ExaminationType {
-  LABORATORY    // 实验室检查
-  RADIOLOGY     // 影像检查
-  PATHOLOGY     // 病理检查
-  FUNCTION      // 功能检查
-  ENDOSCOPY     // 内镜检查
-  ULTRASOUND    // 超声检查
-  ECG           // 心电图
-  EEG           // 脑电图
-}
-
-enum ExaminationStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
 }

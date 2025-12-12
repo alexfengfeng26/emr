@@ -70,7 +70,7 @@ const getMe = async (request: FastifyRequest, reply: FastifyReply) => {
     select: {
       id: true,
       username: true,
-      name: true,
+      realName: true,
       email: true,
       phone: true,
       role: true,

@@ -43,18 +43,21 @@ export class AuthService {
     // 创建用户
     const user = await prisma.user.create({
       data: {
+        userId: `U${Date.now()}${Math.floor(Math.random() * 1000)}`,
         username,
         password: passwordHash,
-        name,
+        realName: name,
         email,
         phone,
         role,
-        department
+        department,
+        status: 'ACTIVE'
       },
       select: {
         id: true,
+        userId: true,
         username: true,
-        name: true,
+        realName: true,
         email: true,
         phone: true,
         role: true,
@@ -73,15 +76,7 @@ export class AuthService {
   // 用户登录验证
   static async validateUser(username: string, password: string) {
     const user = await prisma.user.findUnique({
-      where: { username },
-      include: {
-        department: true,
-        roles: {
-          include: {
-            role: true
-          }
-        }
-      }
+      where: { username }
     })
 
     if (!user) {
@@ -107,7 +102,7 @@ export class AuthService {
       userId: userWithoutPassword.id,
       username: userWithoutPassword.username,
       realName: userWithoutPassword.realName,
-      roles: userWithoutPassword.roles.map(ur => ur.role.code),
+      roles: [userWithoutPassword.role], // 直接使用用户的角色字段
       permissions: [], // 这里可以根据角色获取权限
       department: userWithoutPassword.department,
       status: userWithoutPassword.status
