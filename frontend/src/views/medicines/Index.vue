@@ -20,7 +20,7 @@
                 <div class="stat-value">{{ statistics.totalMedicines }}</div>
                 <div class="stat-label">药品总数</div>
               </div>
-              <el-icon class="stat-icon primary"><MedicineBottle /></el-icon>
+              <el-icon class="stat-icon primary"><Box /></el-icon>
             </el-card>
           </el-col>
           <el-col :span="6">
@@ -325,7 +325,7 @@ import {
   CopyDocument,
   Printer,
   Delete,
-  MedicineBottle,
+  Box,
   Check,
   Warning,
   WarningFilled,
@@ -398,14 +398,14 @@ const fetchMedicines = async () => {
     searchForm.pageSize = pagination.pageSize
 
     const response = await getMedicines(searchForm)
-    tableData.value = response.data.list
-    pagination.total = response.data.total
+    tableData.value = response.list
+    pagination.total = response.total
 
     // 更新统计信息
-    statistics.totalMedicines = response.data.total
-    statistics.activeMedicines = response.data.list.filter(m => m.status === 'ACTIVE').length
-    statistics.prescriptionOnly = response.data.list.filter(m => m.type === 'PRESCRIPTION').length
-    statistics.lowStockMedicines = Math.floor(response.data.total * 0.15) // 模拟数据
+    statistics.totalMedicines = response.total
+    statistics.activeMedicines = response.list.filter(m => m.status === 'ACTIVE').length
+    statistics.prescriptionOnly = response.list.filter(m => m.type === 'PRESCRIPTION').length
+    statistics.lowStockMedicines = Math.floor(response.total * 0.15) // 模拟数据
   } catch (error) {
     ElMessage.error('获取药品列表失败')
   } finally {
@@ -417,7 +417,7 @@ const fetchMedicines = async () => {
 const fetchCategories = async () => {
   try {
     const response = await getMedicineCategories()
-    categories.value = response.data.map(cat => cat.category)
+    categories.value = response.map(cat => cat.category)
   } catch (error) {
     console.error('获取分类失败:', error)
   }

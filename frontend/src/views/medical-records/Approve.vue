@@ -436,8 +436,8 @@ const loadRecords = async () => {
     }
 
     const response = await medicalRecordApi.getMedicalRecords(query)
-    recordList.value = response.data.list
-    pagination.total = response.data.total
+    recordList.value = response.list
+    pagination.total = response.total
   } catch (error) {
     console.error('加载病历列表失败:', error)
     ElMessage.error('加载病历列表失败')

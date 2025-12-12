@@ -459,8 +459,8 @@ const fetchUsers = async () => {
     searchForm.pageSize = pagination.pageSize
 
     const response = await systemApi.getUsers(searchForm)
-    userList.value = response.data.items
-    pagination.total = response.data.total
+    userList.value = response.items
+    pagination.total = response.total
 
     // 更新统计信息
     statistics.totalUsers = pagination.total
@@ -478,7 +478,7 @@ const fetchUsers = async () => {
 const fetchDepartments = async () => {
   try {
     const response = await systemApi.getDepartments()
-    departments.value = response.data.items
+    departments.value = response.items
   } catch (error) {
     console.error('获取科室列表失败:', error)
   }

@@ -9,6 +9,7 @@ import path from 'path'
 import { config } from '@/config'
 import { logger } from '@/utils/logger'
 import { authRoutes } from '@/routes/auth'
+import { systemRoutes } from '@/routes/system'
 import { patientRoutes } from '@/routes/patients'
 import { medicalRecordRoutes } from '@/routes/medical-records'
 import { medicalOrderRoutes } from '@/routes/medical-orders'
@@ -86,14 +87,27 @@ async function registerRoutes() {
     }
   })
 
+  // 添加认证测试路由
+  fastify.get('/api/test/auth', { preHandler: authenticate }, async (request, reply) => {
+    return {
+      code: 0,
+      message: '认证测试成功',
+      user: request.user,
+      timestamp: new Date().toISOString()
+    }
+  })
+
   // 注册认证路由
   fastify.register(authRoutes, { prefix: '/api/auth' })
 
-  // 暂时注释掉其他业务路由，避免错误
-  // fastify.register(patientRoutes, { prefix: '/api/patients' })
-  // fastify.register(medicalRecordRoutes, { prefix: '/api/medical-records' })
-  // fastify.register(medicalOrderRoutes, { prefix: '/api/medical-orders' })
-  // fastify.register(examinationRoutes, { prefix: '/api/examinations' })
+  // 注册系统管理路由
+  fastify.register(systemRoutes, { prefix: '/api/system' })
+
+  // 注册业务路由
+  fastify.register(patientRoutes, { prefix: '/api/patients' })
+  fastify.register(medicalRecordRoutes, { prefix: '/api/medical-records' })
+  fastify.register(medicalOrderRoutes, { prefix: '/api/medical-orders' })
+  fastify.register(examinationRoutes, { prefix: '/api/examinations' })
 }
 
 // 错误处理

@@ -158,7 +158,7 @@ const routes: RouteRecordRaw[] = [
         path: '/medicines',
         name: 'Medicines',
         component: () => import('@/views/medicines/Index.vue'),
-        meta: { title: '药品管理', icon: 'MedicineBottle' }
+        meta: { title: '药品管理', icon: 'Box' }
       },
       {
         path: '/medicines/create',

@@ -464,4 +464,83 @@ export class MedicalRecordService {
 
     return versions
   }
+
+  // 获取病历统计信息
+  static async getMedicalRecordStatistics(startDate?: string, endDate?: string) {
+    const where: any = {}
+
+    if (startDate || endDate) {
+      where.createdAt = {}
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate)
+      }
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate)
+      }
+    }
+
+    const [
+      totalRecords,
+      draftRecords,
+      submittedRecords,
+      approvedRecords,
+      typeStats,
+      recentRecords
+    ] = await Promise.all([
+      // 总病历数
+      prisma.medicalRecord.count({ where }),
+
+      // 草稿病历数
+      prisma.medicalRecord.count({
+        where: {
+          ...where,
+          status: 'DRAFT'
+        }
+      }),
+
+      // 已提交病历数
+      prisma.medicalRecord.count({
+        where: {
+          ...where,
+          status: 'SUBMITTED'
+        }
+      }),
+
+      // 已审核病历数
+      prisma.medicalRecord.count({
+        where: {
+          ...where,
+          status: 'APPROVED'
+        }
+      }),
+
+      // 病历类型统计
+      prisma.medicalRecord.groupBy({
+        by: ['type'],
+        where,
+        _count: true
+      }),
+
+      // 最近7天新增病历
+      prisma.medicalRecord.count({
+        where: {
+          createdAt: {
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          }
+        }
+      })
+    ])
+
+    return {
+      totalRecords,
+      draftRecords,
+      submittedRecords,
+      approvedRecords,
+      recentRecords,
+      typeStats: typeStats.reduce((acc, item) => {
+        acc[item.type] = item._count
+        return acc
+      }, {} as Record<string, number>)
+    }
+  }
 }

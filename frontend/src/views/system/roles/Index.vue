@@ -412,13 +412,13 @@ const fetchRoles = async () => {
   loading.value = true
   try {
     const response = await systemApi.getRoles(queryParams)
-    roles.value = response.data.items
-    pagination.total = response.data.total
-    pagination.page = response.data.page
-    pagination.pageSize = response.data.pageSize
+    roles.value = response.items
+    pagination.total = response.total
+    pagination.page = response.page
+    pagination.pageSize = response.pageSize
 
     // 更新统计数据
-    statistics.total = response.data.total
+    statistics.total = response.total
     statistics.active = activeCount.value
     statistics.system = systemCount.value
     statistics.totalUsers = totalUserCount.value
@@ -444,7 +444,7 @@ const fetchPermissionTree = async () => {
 const fetchRoleUsers = async (roleId: number) => {
   try {
     const response = await systemApi.getRoleUsers(roleId)
-    roleUsers.value = response.data.items
+    roleUsers.value = response.items
   } catch (error) {
     console.error('获取角色用户列表失败:', error)
     ElMessage.error('获取角色用户列表失败')
@@ -455,7 +455,7 @@ const fetchRoleUsers = async (roleId: number) => {
 const fetchRolePermissions = async (roleId: number) => {
   try {
     const response = await systemApi.getRolePermissions(roleId)
-    selectedPermissionIds.value = response.data.map((p: any) => p.id)
+    selectedPermissionIds.value = response.map((p: any) => p.id)
   } catch (error) {
     console.error('获取角色权限失败:', error)
   }

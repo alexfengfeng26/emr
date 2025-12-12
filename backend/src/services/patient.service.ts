@@ -16,10 +16,21 @@ export class PatientService {
     emergencyContact?: string
     emergencyPhone?: string
     bloodType?: BloodType
+    rhFactor?: string
+    maritalStatus?: string
+    occupation?: string
+    employer?: string
+    insuranceType?: string
+    insuranceNumber?: string
     allergies?: string
     medicalHistory?: string
+    familyHistory?: string
   }, doctorId: number) {
-    const { name, gender, birthDate, idCard, phone, address, emergencyContact, emergencyPhone, bloodType, allergies, medicalHistory } = patientData
+    const {
+      name, gender, birthDate, idCard, phone, address, emergencyContact, emergencyPhone,
+      bloodType, rhFactor, maritalStatus, occupation, employer, insuranceType,
+      insuranceNumber, allergies, medicalHistory, familyHistory
+    } = patientData
 
     // 验证身份证号格式
     if (idCard && !this.validateIdCard(idCard)) {
@@ -49,6 +60,7 @@ export class PatientService {
     // 创建患者
     const patient = await prisma.patient.create({
       data: {
+        patientId: `P${Date.now()}${Math.floor(Math.random() * 1000)}`,
         name,
         gender,
         birthDate: new Date(birthDate),
@@ -58,8 +70,15 @@ export class PatientService {
         emergencyContact,
         emergencyPhone,
         bloodType,
+        rhFactor,
+        maritalStatus,
+        occupation,
+        employer,
+        insuranceType,
+        insuranceNumber,
         allergies,
         medicalHistory,
+        familyHistory,
         status: PatientStatus.ACTIVE
       }
     })
@@ -289,10 +308,10 @@ export class PatientService {
       throw new ValidationError('只能删除活跃状态的患者')
     }
 
-    // 软删除：更新状态为已出院
+    // 软删除：更新状态为非活跃
     await prisma.patient.update({
       where: { id: patientId },
-      data: { status: PatientStatus.DISCHARGED }
+      data: { status: PatientStatus.INACTIVE }
     })
 
     // 记录审计日志
@@ -349,5 +368,74 @@ export class PatientService {
     }
 
     return age
+  }
+
+  // 获取患者统计信息
+  static async getPatientStatistics(startDate?: string, endDate?: string) {
+    const where: any = {}
+
+    if (startDate || endDate) {
+      where.createdAt = {}
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate)
+      }
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate)
+      }
+    }
+
+    const [
+      totalPatients,
+      activePatients,
+      inactivePatients,
+      genderStats,
+      recentPatients
+    ] = await Promise.all([
+      // 总患者数
+      prisma.patient.count({ where }),
+
+      // 活跃患者数
+      prisma.patient.count({
+        where: {
+          ...where,
+          status: PatientStatus.ACTIVE
+        }
+      }),
+
+      // 非活跃患者数
+      prisma.patient.count({
+        where: {
+          ...where,
+          status: PatientStatus.INACTIVE
+        }
+      }),
+
+      // 性别统计
+      prisma.patient.groupBy({
+        by: ['gender'],
+        where,
+        _count: true
+      }),
+
+      // 最近7天新增患者
+      prisma.patient.count({
+        where: {
+          createdAt: {
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          }
+        }
+      })
+    ])
+
+    return {
+      totalPatients,
+      activePatients,
+      inactivePatients,
+      recentPatients,
+      genderStats: genderStats.reduce((acc, item) => {
+        acc[item.gender] = item._count
+        return acc
+      }, {} as Record<string, number>)
+    }
   }
 }

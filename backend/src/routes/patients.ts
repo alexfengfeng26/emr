@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { PatientService } from '@/services/patient.service'
-import { requireDoctorOrNurse } from '@/middleware/auth'
+import { requireDoctorOrNurse, authenticate } from '@/middleware/auth'
 import { z } from 'zod'
 import { Gender, BloodType, PatientStatus } from '@prisma/client'
 
@@ -163,34 +163,52 @@ const findPatientByIdCard = async (request: FastifyRequest, reply: FastifyReply)
   }
 }
 
+// 获取患者统计信息
+const getPatientStatistics = async (request: FastifyRequest, reply: FastifyReply) => {
+  const { startDate, endDate } = request.query as any
+
+  const statistics = await PatientService.getPatientStatistics(startDate, endDate)
+
+  return {
+    code: 0,
+    message: '获取成功',
+    data: { statistics }
+  }
+}
+
 export const patientRoutes = async (fastify: FastifyInstance) => {
   // 获取患者列表（医生和护士可以查看）
   fastify.get('/', {
-    preHandler: requireDoctorOrNurse
+    preHandler: [authenticate, requireDoctorOrNurse]
   }, getPatientList)
 
   // 创建患者（医生和护士可以创建）
   fastify.post('/', {
-    preHandler: requireDoctorOrNurse
+    preHandler: [authenticate, requireDoctorOrNurse]
   }, createPatient)
 
   // 根据身份证号查找患者
   fastify.get('/search/id-card', {
-    preHandler: requireDoctorOrNurse
+    preHandler: [authenticate, requireDoctorOrNurse]
   }, findPatientByIdCard)
+
+  // 获取患者统计信息
+  fastify.get('/statistics', {
+    preHandler: [authenticate, requireDoctorOrNurse]
+  }, getPatientStatistics)
 
   // 获取患者详情
   fastify.get('/:id', {
-    preHandler: requireDoctorOrNurse
+    preHandler: [authenticate, requireDoctorOrNurse]
   }, getPatientById)
 
   // 更新患者信息（医生和护士可以更新）
   fastify.put('/:id', {
-    preHandler: requireDoctorOrNurse
+    preHandler: [authenticate, requireDoctorOrNurse]
   }, updatePatient)
 
   // 删除患者（医生和护士可以删除）
   fastify.delete('/:id', {
-    preHandler: requireDoctorOrNurse
+    preHandler: [authenticate, requireDoctorOrNurse]
   }, deletePatient)
 }

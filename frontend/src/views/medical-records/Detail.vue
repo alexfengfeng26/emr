@@ -443,7 +443,7 @@ const handleCopyRecord = async () => {
     if (medicalRecord.value) {
       const response = await medicalRecordApi.copyMedicalRecord(medicalRecord.value.id)
       ElMessage.success('病历复制成功')
-      router.push(`/medical-records/${response.data.id}/edit`)
+      router.push(`/medical-records/${response.id}/edit`)
     }
   } catch (error) {
     console.error('复制病历失败:', error)

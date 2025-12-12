@@ -74,17 +74,13 @@ export class AuthService {
   static async validateUser(username: string, password: string) {
     const user = await prisma.user.findUnique({
       where: { username },
-      select: {
-        id: true,
-        username: true,
-        password: true,
-        name: true,
-        email: true,
-        phone: true,
-        role: true,
+      include: {
         department: true,
-        status: true,
-        createdAt: true
+        roles: {
+          include: {
+            role: true
+          }
+        }
       }
     })
 
@@ -103,10 +99,19 @@ export class AuthService {
       throw new UnauthorizedError('用户名或密码错误')
     }
 
-    // 返回用户信息（不包含密码）
+    // 返回用户信息（不包含密码），处理角色和权限信息
     const { password: _, ...userWithoutPassword } = user
 
-    return userWithoutPassword
+    // 构建JWT payload
+    return {
+      userId: userWithoutPassword.id,
+      username: userWithoutPassword.username,
+      realName: userWithoutPassword.realName,
+      roles: userWithoutPassword.roles.map(ur => ur.role.code),
+      permissions: [], // 这里可以根据角色获取权限
+      department: userWithoutPassword.department,
+      status: userWithoutPassword.status
+    }
   }
 
   // 修改密码

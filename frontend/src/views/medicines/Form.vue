@@ -579,7 +579,7 @@ async function validateMedicineId(rule: any, value: string, callback: any) {
 const fetchSuppliers = async () => {
   try {
     const response = await getSuppliers()
-    suppliers.value = response.data.list
+    suppliers.value = response.list
   } catch (error) {
     console.error('获取供应商列表失败:', error)
   }

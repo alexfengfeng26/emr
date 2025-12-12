@@ -124,7 +124,7 @@
             <el-card class="revenue-card medicine">
               <div class="revenue-content">
                 <div class="revenue-icon">
-                  <el-icon><MedicineBottle /></el-icon>
+                  <el-icon><Box /></el-icon>
                 </div>
                 <div class="revenue-info">
                   <div class="revenue-title">药品收入</div>
@@ -370,7 +370,7 @@ import {
   Money,
   Stethoscope,
   Hospital,
-  MedicineBottle,
+  Box,
   CaretTop,
   CaretBottom,
   Download,

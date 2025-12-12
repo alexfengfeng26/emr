@@ -387,7 +387,7 @@ const fetchDepartments = async () => {
 const fetchDepartmentUsers = async (departmentId: number) => {
   try {
     const response = await systemApi.getDepartmentUsers(departmentId)
-    departmentUsers.value = response.data.items
+    departmentUsers.value = response.items
   } catch (error) {
     console.error('获取科室用户列表失败:', error)
     ElMessage.error('获取科室用户列表失败')

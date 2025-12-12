@@ -310,7 +310,7 @@ const formRules = {
 const fetchDepartments = async () => {
   try {
     const response = await systemApi.getDepartments()
-    departments.value = response.data.items
+    departments.value = response.items
   } catch (error) {
     console.error('获取科室列表失败:', error)
     ElMessage.error('获取科室列表失败')
@@ -321,7 +321,7 @@ const fetchDepartments = async () => {
 const fetchRoles = async () => {
   try {
     const response = await systemApi.getRoles()
-    roles.value = response.data.items
+    roles.value = response.items
   } catch (error) {
     console.error('获取角色列表失败:', error)
     ElMessage.value = '获取角色列表失败'

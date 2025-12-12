@@ -14,11 +14,15 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx src/prisma/seed.ts"
   },
-  "keywords": ["emr", "fastify", "medical", "api"],
+  "keywords": [
+    "emr",
+    "fastify",
+    "medical",
+    "api"
+  ],
   "author": "EMR Team",
   "license": "MIT",
   "dependencies": {
-    "fastify": "^4.24.3",
     "@fastify/cors": "^8.4.2",
     "@fastify/jwt": "^7.2.4",
     "@fastify/multipart": "^8.0.0",
@@ -26,11 +30,13 @@
     "@fastify/redis": "^6.1.1",
     "@fastify/static": "^6.12.0",
     "@prisma/client": "^5.7.1",
+    "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",
-    "winston": "^3.11.0",
-    "zod": "^3.22.4",
     "dayjs": "^1.11.10",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "fastify": "^4.24.3",
+    "winston": "^3.11.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

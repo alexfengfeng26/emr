@@ -403,13 +403,13 @@ const fetchSettings = async () => {
   loading.value = true
   try {
     const response = await systemApi.getSettings(queryParams)
-    settings.value = response.data.items
-    pagination.total = response.data.total
-    pagination.page = response.data.page
-    pagination.pageSize = response.data.pageSize
+    settings.value = response.items
+    pagination.total = response.total
+    pagination.page = response.page
+    pagination.pageSize = response.pageSize
 
     // 更新统计数据
-    statistics.total = response.data.total
+    statistics.total = response.total
     statistics.editable = editableCount.value
     statistics.public = publicCount.value
     statistics.categories = categories.value.length

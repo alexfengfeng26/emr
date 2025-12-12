@@ -1,31 +1,53 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
 import { UnauthorizedError, ForbiddenError } from '@/utils/errors'
-import { UserRole } from '@prisma/client'
+
+// 用户信息接口
+interface UserInfo {
+  userId: number
+  username: string
+  realName: string
+  roles: string[]
+  permissions: string[]
+  iat?: number
+  exp?: number
+}
 
 // 扩展FastifyRequest类型
 declare module 'fastify' {
   interface FastifyRequest {
-    user?: {
-      userId: number
-      username: string
-      role: UserRole
-      iat?: number
-      exp?: number
-    }
+    user?: UserInfo
   }
 }
 
 // 认证中间件
 export const authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    await request.jwtVerify()
+    console.log('开始JWT验证，Authorization header:', request.headers.authorization)
+    const decoded = await request.jwtVerify()
+    console.log('JWT解码结果:', decoded)
+
+    // 确保用户信息包含必要的字段
+    const userInfo: UserInfo = {
+      userId: decoded.userId || 0,
+      username: decoded.username || '',
+      realName: decoded.realName || decoded.username || '',
+      roles: Array.isArray(decoded.roles) ? decoded.roles : [],
+      permissions: Array.isArray(decoded.permissions) ? decoded.permissions : [],
+      iat: decoded.iat,
+      exp: decoded.exp
+    }
+
+    // 手动设置用户信息到request.user
+    request.user = userInfo
+    console.log('设置后的用户信息:', request.user)
   } catch (err) {
+    console.error('JWT验证失败:', err)
     throw new UnauthorizedError('无效的访问令牌')
   }
 }
 
 // 权限检查中间件工厂
-export const requireRole = (roles: UserRole | UserRole[]) => {
+export const requireRole = (roles: string | string[]) => {
   const allowedRoles = Array.isArray(roles) ? roles : [roles]
 
   return async (request: FastifyRequest, reply: FastifyReply) => {
@@ -33,24 +55,65 @@ export const requireRole = (roles: UserRole | UserRole[]) => {
       throw new UnauthorizedError('用户未认证')
     }
 
-    if (!allowedRoles.includes(request.user.role)) {
+    // 检查用户角色是否存在
+    if (!request.user.roles || !Array.isArray(request.user.roles)) {
+      console.error('用户角色信息无效:', request.user)
+      throw new ForbiddenError('用户角色信息无效')
+    }
+
+    const hasRole = request.user.roles.some(role => allowedRoles.includes(role))
+    if (!hasRole) {
+      console.error('角色检查失败:', {
+        userRoles: request.user.roles,
+        allowedRoles,
+        userId: request.user.userId
+      })
+      throw new ForbiddenError('权限不足')
+    }
+  }
+}
+
+// 权限检查中间件工厂
+export const requirePermission = (permissions: string | string[]) => {
+  const allowedPermissions = Array.isArray(permissions) ? permissions : [permissions]
+
+  return async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!request.user) {
+      throw new UnauthorizedError('用户未认证')
+    }
+
+    // 检查用户权限是否存在
+    if (!request.user.permissions || !Array.isArray(request.user.permissions)) {
+      console.error('用户权限信息无效:', request.user)
+      throw new ForbiddenError('用户权限信息无效')
+    }
+
+    const hasPermission = request.user.permissions.some(permission =>
+      allowedPermissions.includes(permission)
+    )
+    if (!hasPermission) {
+      console.error('权限检查失败:', {
+        userPermissions: request.user.permissions,
+        allowedPermissions,
+        userId: request.user.userId
+      })
       throw new ForbiddenError('权限不足')
     }
   }
 }
 
 // 常用权限检查中间件
-export const requireAdmin = requireRole(UserRole.ADMIN)
-export const requireDoctor = requireRole([UserRole.DOCTOR, UserRole.ADMIN])
-export const requireNurse = requireRole([UserRole.NURSE, UserRole.ADMIN])
-export const requireDoctorOrNurse = requireRole([UserRole.DOCTOR, UserRole.NURSE, UserRole.ADMIN])
+export const requireAdmin = requireRole('ADMIN')
+export const requireDoctor = requireRole(['DOCTOR', 'ADMIN'])
+export const requireNurse = requireRole(['NURSE', 'ADMIN'])
+export const requireDoctorOrNurse = requireRole(['DOCTOR', 'NURSE', 'ADMIN'])
 
 // 资源所有者检查
 export const requireOwnership = async (request: FastifyRequest, reply: FastifyReply) => {
-  const { userId, role } = request.user!
+  const { userId, roles } = request.user!
 
   // 管理员可以访问所有资源
-  if (role === UserRole.ADMIN) {
+  if (roles.includes('ADMIN')) {
     return
   }
 
@@ -83,7 +146,9 @@ export const authenticateApiKey = async (request: FastifyRequest, reply: Fastify
   request.user = {
     userId: 0, // 系统用户
     username: 'system',
-    role: UserRole.ADMIN
+    realName: '系统用户',
+    roles: ['ADMIN'],
+    permissions: []
   }
 }
 

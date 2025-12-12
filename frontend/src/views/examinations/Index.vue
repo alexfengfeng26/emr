@@ -297,8 +297,8 @@ const fetchExaminations = async () => {
     searchForm.pageSize = pagination.pageSize
 
     const response = await examinationApi.getExaminations(searchForm)
-    examinationList.value = response.data.list
-    pagination.total = response.data.total
+    examinationList.value = response.list
+    pagination.total = response.total
 
     // 更新统计信息
     statistics.totalExaminations = pagination.total

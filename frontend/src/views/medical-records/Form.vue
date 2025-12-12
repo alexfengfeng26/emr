@@ -589,7 +589,7 @@ const searchPatients = async (query: string) => {
   try {
     patientSearchLoading.value = true
     const response = await patientApi.searchPatients(query)
-    patientOptions.value = response.data.slice(0, 10) // 限制显示10个结果
+    patientOptions.value = response.slice(0, 10) // 限制显示10个结果
   } catch (error) {
     console.error('搜索患者失败:', error)
     ElMessage.error('搜索患者失败')
@@ -750,7 +750,7 @@ const handleSubmit = async () => {
       await medicalRecordApi.submitMedicalRecord(recordId)
     } else {
       const response = await medicalRecordApi.createMedicalRecord(data)
-      await medicalRecordApi.submitMedicalRecord(response.data.id)
+      await medicalRecordApi.submitMedicalRecord(response.id)
     }
 
     ElMessage.success('病历提交成功')

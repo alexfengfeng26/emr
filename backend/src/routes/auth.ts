@@ -14,9 +14,10 @@ const register = async (request: FastifyRequest, reply: FastifyReply) => {
 
   // 生成JWT token
   const token = await reply.jwtSign({
-    userId: user.id,
+    userId: user.userId,
     username: user.username,
-    role: user.role
+    roles: user.roles,
+    permissions: user.permissions
   })
 
   logAudit('USER_REGISTER', user.id, { ip: request.ip, userAgent: request.headers['user-agent'] })
@@ -40,9 +41,10 @@ const login = async (request: FastifyRequest, reply: FastifyReply) => {
 
   // 生成JWT token
   const token = await reply.jwtSign({
-    userId: user.id,
+    userId: user.userId,
     username: user.username,
-    role: user.role
+    roles: user.roles,
+    permissions: user.permissions
   })
 
   // 记录登录日志
@@ -115,13 +117,14 @@ const logout = async (request: FastifyRequest, reply: FastifyReply) => {
 
 // 刷新token
 const refreshToken = async (request: FastifyRequest, reply: FastifyReply) => {
-  const { userId, username, role } = request.user as any
+  const { userId, username, roles } = request.user as any
 
   // 生成新的token
   const token = await reply.jwtSign({
     userId,
     username,
-    role
+    roles: roles || [],
+    permissions: []
   })
 
   return {

@@ -11,77 +11,120 @@ datasource db {
 // 用户表
 model User {
   id          Int      @id @default(autoincrement())
+  userId      String   @unique @db.VarChar(50)  // 业务编号，如 U20250111001
   username    String   @unique @db.VarChar(50)
   password    String   @db.VarChar(255)
-  name        String   @db.VarChar(100)
+  realName    String   @db.VarChar(100)         // 真实姓名
   email       String?  @unique @db.VarChar(100)
   phone       String?  @db.VarChar(20)
-  role        UserRole @default(DOCTOR)
-  department  String?  @db.VarChar(100)
   avatar      String?  @db.VarChar(255)
+  departmentId Int?
+  position    String?  @db.VarChar(100)        // 职位
+  title       String?  @db.VarChar(100)        // 职称
   status      UserStatus @default(ACTIVE)
+  lastLoginAt DateTime?
+  lastLoginIp String?  @db.VarChar(45)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  createdBy   Int?
+  updatedBy   Int?
 
   // 关联关系
+  department  Department? @relation("DepartmentUsers", fields: [departmentId], references: [id])
+  roles       UserRole[]
   medicalRecords     MedicalRecord[]
+  submittedRecords   MedicalRecord[] @relation("RecordSubmitter")
+  approvedRecords    MedicalRecord[] @relation("RecordApprover")
+  rejectedRecords    MedicalRecord[] @relation("RecordRejecter")
   medicalOrders      MedicalOrder[]
   requestedExaminations Examination[] @relation("ExaminationRequestedBy")
   reportedExaminations  Examination[] @relation("ExaminationReportedBy")
+  operationLogs      OperationLog[]
   auditLogs          AuditLog[]
+  prescriptions      Prescription[] @relation("PrescriptionDoctor")
+  approvedPrescriptions Prescription[] @relation("PrescriptionApprover")
+  dispensedPrescriptions Prescription[] @relation("PrescriptionDispenser")
+  leaderDepartments  Department[] @relation("DepartmentLeader")
 
   @@map("users")
 }
 
 // 患者表
 model Patient {
-  id          Int      @id @default(autoincrement())
-  name        String   @db.VarChar(100)
-  gender      Gender
-  birthDate   DateTime
-  idCard      String?  @unique @db.VarChar(18)
-  phone       String?  @db.VarChar(20)
-  address     String?  @db.Text
+  id              Int      @id @default(autoincrement())
+  patientId       String   @unique @db.VarChar(50)    // 业务编号
+  name            String   @db.VarChar(100)
+  gender          Gender
+  birthDate       DateTime
+  idCard          String?  @unique @db.VarChar(18)
+  phone           String?  @db.VarChar(20)
+  address         String?  @db.Text
   emergencyContact String? @db.VarChar(100)
   emergencyPhone   String? @db.VarChar(20)
-  bloodType   BloodType?
-  allergies   String?  @db.Text
-  medicalHistory String? @db.Text
-  status      PatientStatus @default(ACTIVE)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  bloodType       BloodType?
+  rhFactor        String?  @db.VarChar(20)           // Rh因子
+  maritalStatus   String?  @db.VarChar(20)           // 婚姻状况
+  occupation      String?  @db.VarChar(100)
+  employer        String?  @db.VarChar(200)          // 工作单位
+  insuranceType   String?  @db.VarChar(50)           // 医保类型
+  insuranceNumber String?  @db.VarChar(50)           // 医保号
+  allergies       String?  @db.Text
+  medicalHistory  String?  @db.Text
+  familyHistory   String?  @db.Text                  // 家族史
+  status          PatientStatus @default(ACTIVE)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // 关联关系
   medicalRecords MedicalRecord[]
   medicalOrders  MedicalOrder[]
   examinations   Examination[]
+  prescriptions  Prescription[]
 
+  @@index([patientId])
   @@map("patients")
 }
 
 // 病历表
 model MedicalRecord {
-  id          Int              @id @default(autoincrement())
-  patientId   Int
-  doctorId    Int
-  type        MedicalRecordType
-  title       String           @db.VarChar(200)
-  content     String           @db.Text
-  diagnosis   String?          @db.Text
-  treatment   String?          @db.Text
-  prescription String?         @db.Text
-  attachments String?          @db.Text // JSON格式存储附件信息
-  version     Int              @default(1)
-  status      MedicalRecordStatus @default(DRAFT)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id            Int              @id @default(autoincrement())
+  recordId      String           @unique @db.VarChar(50)    // 业务编号
+  patientId     Int
+  doctorId      Int
+  type          MedicalRecordType
+  title         String           @db.VarChar(200)
+  content       String           @db.Text
+  diagnosis     String?          @db.Text
+  treatment     String?          @db.Text
+  prescription  String?          @db.Text
+  attachments   String?          @db.Text                  // JSON格式存储附件信息
+  version       Int              @default(1)
+  visitType     String?          @db.VarChar(50)           // 就诊方式
+  urgency       String?          @db.VarChar(20)           // 紧急程度
+  tags          String?          @db.Text                  // JSON格式存储标签
+  status        MedicalRecordStatus @default(DRAFT)
+  submittedAt   DateTime?
+  submittedBy   Int?
+  approvedAt    DateTime?
+  approvedBy    Int?
+  rejectedAt    DateTime?
+  rejectedBy    Int?
+  reviewStatus  String           @default("PENDING")       // REVIEWING, APPROVED, REJECTED
+  reviewComment String?          @db.Text
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   // 关联关系
-  patient   Patient @relation(fields: [patientId], references: [id])
-  doctor    User    @relation(fields: [doctorId], references: [id])
+  patient     Patient @relation(fields: [patientId], references: [id])
+  doctor      User    @relation(fields: [doctorId], references: [id])
+  submitter   User?   @relation("RecordSubmitter", fields: [submittedBy], references: [id])
+  approver    User?   @relation("RecordApprover", fields: [approvedBy], references: [id])
+  rejecter    User?   @relation("RecordRejecter", fields: [rejectedBy], references: [id])
 
+  @@index([recordId])
   @@index([patientId])
   @@index([doctorId])
+  @@index([status])
   @@index([createdAt])
   @@map("medical_records")
 }
@@ -89,6 +132,7 @@ model MedicalRecord {
 // 医嘱表
 model MedicalOrder {
   id          Int              @id @default(autoincrement())
+  orderId     String           @unique @db.VarChar(50)    // 业务编号
   patientId   Int
   doctorId    Int
   orderType   MedicalOrderType
@@ -97,6 +141,7 @@ model MedicalOrder {
   frequency   String?          @db.VarChar(100)
   duration    String?          @db.VarChar(100)
   priority    OrderPriority    @default(NORMAL)
+  urgency     String?          @db.VarChar(20)           // 紧急程度
   status      OrderStatus      @default(PENDING)
   executedAt  DateTime?
   executedBy  Int?
@@ -108,6 +153,7 @@ model MedicalOrder {
   patient     Patient @relation(fields: [patientId], references: [id])
   doctor      User    @relation(fields: [doctorId], references: [id])
 
+  @@index([orderId])
   @@index([patientId])
   @@index([doctorId])
   @@index([status])
@@ -156,6 +202,259 @@ model SystemConfig {
   @@map("system_configs")
 }
 
+// 角色表
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(100)
+  code        String   @unique @db.VarChar(50)
+  description String?  @db.Text
+  isSystem    Boolean  @default(false)
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   Int?
+  updatedBy   Int?
+
+  // 关联关系
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+// 权限表
+model Permission {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(100)
+  code        String   @unique @db.VarChar(50)
+  description String?  @db.Text
+  module      String   @db.VarChar(50)
+  action      String   @db.VarChar(50)
+  resource    String?  @db.VarChar(100)
+  type        String   @default("BUTTON") @db.VarChar(20)  // MENU, BUTTON, API
+  parentId    Int?
+  level       Int      @default(1)
+  sort        Int      @default(0)
+  icon        String?  @db.VarChar(100)
+  path        String?  @db.VarChar(200)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联关系
+  roles       RolePermission[]
+  children    Permission[] @relation("PermissionHierarchy")
+  parent      Permission? @relation("PermissionHierarchy", fields: [parentId], references: [id])
+
+  @@map("permissions")
+}
+
+// 用户角色关联表
+model UserRole {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  roleId    Int
+  createdAt DateTime @default(now())
+  createdBy Int?
+
+  // 关联关系
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+// 角色权限关联表
+model RolePermission {
+  id           Int      @id @default(autoincrement())
+  roleId       Int
+  permissionId Int
+  createdAt    DateTime @default(now())
+  createdBy    Int?
+
+  // 关联关系
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// 科室表
+model Department {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(200)
+  description String?  @db.Text
+  type        String   @db.VarChar(50)           // CLINICAL, MEDICAL_TECH, NURSING, ADMIN, SUPPORT
+  parentId    Int?
+  level       Int      @default(1)
+  sort        Int      @default(0)
+  leaderId    Int?
+  phone       String?  @db.VarChar(20)
+  location    String?  @db.Text
+  bedCount    Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   Int?
+  updatedBy   Int?
+
+  // 关联关系
+  parent      Department? @relation("DepartmentParent", fields: [parentId], references: [id])
+  children    Department[] @relation("DepartmentParent")
+  leader      User?        @relation("DepartmentLeader", fields: [leaderId], references: [id])
+  users       User[]       @relation("DepartmentUsers")
+
+  @@map("departments")
+}
+
+// 药品表
+model Medicine {
+  id              Int      @id @default(autoincrement())
+  code            String   @unique @db.VarChar(50)
+  name            String   @db.VarChar(200)
+  genericName     String?  @db.VarChar(200)
+  specification   String?  @db.VarChar(200)
+  manufacturer    String?  @db.VarChar(200)
+  category        String?  @db.VarChar(50)
+  dosageForm      String?  @db.VarChar(50)
+  strength        String?  @db.VarChar(100)
+  unit            String?  @db.VarChar(20)
+  price           Decimal? @db.Decimal(10, 2)
+  type            String?  @db.VarChar(50)           // PRESCRIPTION, OTC
+  status          String   @default("ACTIVE")
+  description     String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdBy       Int?
+  updatedBy       Int?
+
+  // 关联关系
+  stocks          MedicineStock[]
+  prescriptionItems PrescriptionItem[]
+
+  @@map("medicines")
+}
+
+// 药品库存表
+model MedicineStock {
+  id          Int      @id @default(autoincrement())
+  medicineId  Int
+  warehouseId Int
+  batchNumber String   @db.VarChar(100)
+  quantity    Int      @default(0)
+  expiryDate  DateTime
+  unitCost    Decimal? @db.Decimal(10, 2)
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联关系
+  medicine    Medicine @relation(fields: [medicineId], references: [id])
+
+  @@unique([medicineId, warehouseId, batchNumber])
+  @@map("medicine_stocks")
+}
+
+// 处方表
+model Prescription {
+  id            Int      @id @default(autoincrement())
+  prescriptionNo String  @unique @db.VarChar(50)    // 业务编号
+  patientId     Int
+  doctorId      Int
+  diagnosis     String?  @db.Text
+  status        String   @default("DRAFT")           // DRAFT, APPROVED, DISPENSED, CANCELLED
+  approvedAt    DateTime?
+  approvedBy    Int?
+  dispensedAt   DateTime?
+  dispensedBy   Int?
+  totalAmount   Decimal? @db.Decimal(10, 2)
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdBy     Int?
+  updatedBy     Int?
+
+  // 关联关系
+  patient      Patient  @relation(fields: [patientId], references: [id])
+  doctor       User?    @relation("PrescriptionDoctor", fields: [doctorId], references: [id])
+  approver     User?    @relation("PrescriptionApprover", fields: [approvedBy], references: [id])
+  dispenser    User?    @relation("PrescriptionDispenser", fields: [dispensedBy], references: [id])
+  items        PrescriptionItem[]
+
+  @@map("prescriptions")
+}
+
+// 处方明细表
+model PrescriptionItem {
+  id             Int      @id @default(autoincrement())
+  prescriptionId Int
+  medicineId     Int
+  dosage         String   @db.VarChar(200)
+  frequency      String   @db.VarChar(100)
+  duration       String   @db.VarChar(100)
+  quantity       Int
+  unitPrice      Decimal? @db.Decimal(10, 2)
+  totalPrice     Decimal? @db.Decimal(10, 2)
+  notes          String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // 关联关系
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  medicine       Medicine     @relation(fields: [medicineId], references: [id])
+
+  @@map("prescription_items")
+}
+
+// 系统设置表
+model SystemSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique @db.VarChar(100)
+  value       String   @db.Text
+  description String?  @db.VarChar(255)
+  type        String   @default("STRING") @db.VarChar(20)  // STRING, NUMBER, BOOLEAN, JSON, TEXT
+  category    String   @db.VarChar(50)
+  isPublic    Boolean  @default(false)
+  isEditable  Boolean  @default(true)
+  validation  String?  @db.Text
+  sort        Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  updatedBy   Int?
+
+  @@map("system_settings")
+}
+
+// 操作日志表
+model OperationLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  module      String   @db.VarChar(50)           // 操作模块
+  action      String   @db.VarChar(50)           // 操作动作
+  description String   @db.Text                  // 操作描述
+  method      String   @db.VarChar(10)           // 请求方法
+  url         String   @db.VarChar(500)          // 请求URL
+  params      String?  @db.Text                  // 请求参数JSON
+  result      String   @default("SUCCESS") @db.VarChar(20)  // SUCCESS, FAILURE
+  errorMessage String?  @db.Text
+  ipAddress   String?  @db.VarChar(45)
+  userAgent   String?  @db.Text
+  duration    Int?                             // 执行时长（毫秒）
+  createdAt   DateTime @default(now())
+
+  // 关联关系
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([module])
+  @@index([action])
+  @@index([result])
+  @@index([createdAt])
+  @@map("operation_logs")
+}
+
 // 审计日志表
 model AuditLog {
   id        Int      @id @default(autoincrement())
@@ -178,15 +477,10 @@ model AuditLog {
 }
 
 // 枚举定义
-enum UserRole {
-  ADMIN
-  DOCTOR
-  NURSE
-}
-
 enum UserStatus {
   ACTIVE
   INACTIVE
+  SUSPENDED
 }
 
 enum Gender {
@@ -203,8 +497,7 @@ enum BloodType {
 
 enum PatientStatus {
   ACTIVE
-  DISCHARGED
-  TRANSFERRED
+  INACTIVE
   DECEASED
 }
 
@@ -220,6 +513,7 @@ enum MedicalRecordType {
 enum MedicalRecordStatus {
   DRAFT
   SUBMITTED
+  REVIEWING
   APPROVED
   REJECTED
 }
@@ -243,10 +537,13 @@ enum OrderPriority {
 
 enum OrderStatus {
   PENDING
-  APPROVED
-  EXECUTED
+  ACTIVE
+  COMPLETED
   CANCELLED
   SUSPENDED
+  EXPIRED
+  DRAFT
+  ARCHIVED
 }
 
 enum ExaminationType {

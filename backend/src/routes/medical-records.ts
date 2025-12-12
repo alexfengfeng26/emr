@@ -213,6 +213,19 @@ const getMedicalRecordVersions = async (request: FastifyRequest, reply: FastifyR
   }
 }
 
+// 获取病历统计信息
+const getMedicalRecordStatistics = async (request: FastifyRequest, reply: FastifyReply) => {
+  const { startDate, endDate } = request.query as any
+
+  const statistics = await MedicalRecordService.getMedicalRecordStatistics(startDate, endDate)
+
+  return {
+    code: 0,
+    message: '获取成功',
+    data: { statistics }
+  }
+}
+
 export const medicalRecordRoutes = async (fastify: FastifyInstance) => {
   // 获取病历列表（医生可以查看）
   fastify.get('/', {
@@ -228,6 +241,11 @@ export const medicalRecordRoutes = async (fastify: FastifyInstance) => {
   fastify.get('/versions', {
     preHandler: requireDoctor
   }, getMedicalRecordVersions)
+
+  // 获取病历统计信息
+  fastify.get('/statistics', {
+    preHandler: requireDoctor
+  }, getMedicalRecordStatistics)
 
   // 获取病历详情
   fastify.get('/:id', {

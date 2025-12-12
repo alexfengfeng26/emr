@@ -602,7 +602,7 @@ const handleCopyOrder = async (order: MedicalOrder) => {
   try {
     const response = await medicalOrderApi.copyMedicalOrder(order.id)
     ElMessage.success('医嘱复制成功')
-    router.push(`/medical-orders/${response.data.id}/edit`)
+    router.push(`/medical-orders/${response.id}/edit`)
   } catch (error) {
     console.error('复制医嘱失败:', error)
     ElMessage.error('复制医嘱失败')
